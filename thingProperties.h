@@ -10,10 +10,13 @@ const char PASS[] = SECRET_OPTIONAL_PASS; // Network password (use for WPA, or
                                           // use as key for WEP)
 const char DEVICE_KEY[] = SECRET_DEVICE_KEY; // Secret device password
 
+void onTankFillScheduleChange();
 void onTankTriggerFillChange();
 
 float tankFillPercentage;
 CloudLength tankLiquidHeight;
+CloudSchedule tankFillSchedule;
+bool tankFillScheduleStatus;
 bool tankIsFilling;
 bool tankTriggerFill;
 CloudVolume tankVolumeCubicMeters;
@@ -25,6 +28,9 @@ void initProperties() {
     ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
     ArduinoCloud.addProperty(tankFillPercentage, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankLiquidHeight, READ, ON_CHANGE, NULL);
+    ArduinoCloud.addProperty(tankFillSchedule, READWRITE, ON_CHANGE,
+                             onTankFillScheduleChange);
+    ArduinoCloud.addProperty(tankFillScheduleStatus, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankIsFilling, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankTriggerFill, READWRITE, ON_CHANGE,
                              onTankTriggerFillChange);
