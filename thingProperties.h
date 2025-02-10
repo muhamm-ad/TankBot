@@ -10,14 +10,19 @@ const char PASS[] = SECRET_OPTIONAL_PASS; // Network password (use for WPA, or
                                           // use as key for WEP)
 const char DEVICE_KEY[] = SECRET_DEVICE_KEY; // Secret device password
 
+void onPompControllerAmpsRmsErrorChange();
 void onTankFillScheduleChange();
 void onTankTriggerFillChange();
 
+float pompControllerAmpsRms;
+float pompControllerAmpsRmsError;
+float pompControllerWatt;
 float tankFillPercentage;
 CloudLength tankLiquidHeight;
 CloudSchedule tankFillSchedule;
 bool tankFillScheduleStatus;
 bool tankIsFilling;
+bool tankIsFilling_not;
 bool tankTriggerFill;
 CloudVolume tankVolumeCubicMeters;
 CloudVolume tankVolumeLiters;
@@ -26,12 +31,17 @@ void initProperties() {
 
     ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
     ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
+    ArduinoCloud.addProperty(pompControllerAmpsRms, READ, 2 * SECONDS, NULL);
+    ArduinoCloud.addProperty(pompControllerAmpsRmsError, READWRITE, ON_CHANGE,
+                             onPompControllerAmpsRmsErrorChange);
+    ArduinoCloud.addProperty(pompControllerWatt, READ, 5 * SECONDS, NULL);
     ArduinoCloud.addProperty(tankFillPercentage, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankLiquidHeight, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankFillSchedule, READWRITE, ON_CHANGE,
                              onTankFillScheduleChange);
     ArduinoCloud.addProperty(tankFillScheduleStatus, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankIsFilling, READ, ON_CHANGE, NULL);
+    ArduinoCloud.addProperty(tankIsFilling_not, READ, ON_CHANGE, NULL);
     ArduinoCloud.addProperty(tankTriggerFill, READWRITE, ON_CHANGE,
                              onTankTriggerFillChange);
     ArduinoCloud.addProperty(tankVolumeCubicMeters, READ, ON_CHANGE, NULL);

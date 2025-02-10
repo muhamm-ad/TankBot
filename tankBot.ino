@@ -39,6 +39,8 @@ void setup() {
     digitalWrite(FILL_TRIGGER_PIN, FILL_TRIGGER_OFF);
     tankTriggerFill = false;
     tankIsFilling = false;
+
+    pompControllerAmpsRmsError = 0.1;
 }
 
 void loop() {
@@ -64,10 +66,10 @@ void loop() {
     }
 
     tankIsFilling = checkFillingStatus();
+    tankIsFilling_not = !tankIsFilling; // For the stoping notif
 }
 
 void liquidLevelling() {
-
     // Send pulse to trigger the sensor
     digitalWrite(ULTRASONIC_T_TRIG_PIN, LOW);
     delayMicroseconds(2);
@@ -88,17 +90,16 @@ void liquidLevelling() {
 
     // Update cloud variables
     tankFillPercentage = (float(liquidLevel) / TANK_HEIGHT) * 100;
-    tankLiquidHeight = liquidLevel; // Water height in cm
-    tankVolumeLiters =
-        volumeCm3 / 1000; // Convert volume to liters (1 liter = 1000 cubic cm)
-    tankVolumeCubicMeters =
-        volumeCm3 /
-        1000000; // Convert volume to cubic meters (1 m³ = 1,000,000 cm³)
+    // Water height in cm
+    tankLiquidHeight = liquidLevel;
+    // Convert volume to liters (1 liter = 1000 cubic cm)
+    tankVolumeLiters = volumeCm3 / 1000;
+    // Convert volume to cubic meters (1 m³ = 1,000,000 cm³)
+    tankVolumeCubicMeters = volumeCm3 / 1000000;
 }
 
 bool checkFillingStatus() {
-    const float AmpsRmsErro = 0.1;
-    const float outVoltageACS712 = 2.5;
+    const float outVoltageACS712 = 2.4;
     int mVperAmp = 185;
 
     int readValue;
@@ -116,20 +117,25 @@ bool checkFillingStatus() {
 
     double voltage = ((maxValue - minValue) * outVoltageACS712) / 4096.0;
     double VRMS = (voltage / 2.0) * 0.707;
-    float AmpsRms = ((VRMS * 1000) / mVperAmp) - AmpsRmsErro;
-    Serial.println("");
-    Serial.print(AmpsRms);
-    Serial.print(" Amps RMS  ---  ");
+    pompControllerAmpsRms =
+        ((VRMS * 1000) / mVperAmp) - pompControllerAmpsRmsError;
+    // Serial.println("");
+    // Serial.print(pompControllerAmpsRms);
+    // Serial.print(" Amps RMS  ---  ");
 
-    int watt = (AmpsRms * 230 / 1.2);
+    pompControllerWatt = (pompControllerAmpsRms * 230 / 1.2);
     // note: 1.2 is my own empirically established calibration factor
     // as the voltage measured at D34 depends on the length of the OUT-to-D34
     // wire 230 is the main AC power voltage – this parameter changes locally
-    Serial.print(watt);
-    Serial.println(" Watts");
+    // Serial.print(pompControllerWatt);
+    // Serial.println(" Watts");
 
-    return AmpsRms > 0;
+    return pompControllerAmpsRms > 0;
 }
+
+void onTankFillScheduleChange() {}
+
+void onPompControllerAmpsRmsErrorChange() {}
 
 void onTankTriggerFillChange() {
     if (tankTriggerFill) {
@@ -138,5 +144,3 @@ void onTankTriggerFillChange() {
         digitalWrite(FILL_TRIGGER_PIN, FILL_TRIGGER_OFF);
     }
 }
-
-void onTankFillScheduleChange() {}
